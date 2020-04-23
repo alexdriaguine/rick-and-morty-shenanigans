@@ -1,5 +1,6 @@
 import * as React from 'react'
 import styled from '@emotion/styled'
+import { css } from '@emotion/core'
 import { Character } from './characters.api'
 
 const StyledCharacterList = styled.ul`
@@ -15,7 +16,7 @@ const StyledCharacterList = styled.ul`
   }
 
   & > * + * {
-    margin-top: 16px;
+    margin-top: 24px;
   }
 `
 
@@ -23,7 +24,6 @@ const CharacterListItem = styled.li`
   border-radius: 8px;
   display: flex;
   align-items: center;
-  overflow: hidden;
 `
 
 const CharacterImage = styled.img`
@@ -35,13 +35,34 @@ const CharacterImage = styled.img`
 
 const CharacterInfo = styled.div`
   display: flex;
-  flex-direction: column;
-  font-size: 14px;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
 `
 
 const CharacterName = styled.span`
   font-weight: 600;
+  font-size: 16px;
 `
+
+const CharacterLocation = styled.span`
+  font-size: 12px;
+`
+
+const StatusIcon = (props: { status: 'Alive' | 'Dead' | 'Unknown' }) => {
+  const iconMap: Record<'Alive' | 'Dead' | 'Unknown', string> = {
+    Alive: '😀',
+    Dead: '💀',
+    Unknown: '❓',
+  }
+
+  const icon = iconMap[props.status] || iconMap['Unknown']
+  return (
+    <span role="img" aria-label="dude">
+      {icon}
+    </span>
+  )
+}
 
 interface Props {
   characters: Character[]
@@ -54,8 +75,11 @@ export const CharacterList = ({ characters }: Props) => {
         <CharacterListItem key={c.id}>
           <CharacterImage alt={c.name} src={c.image} />
           <CharacterInfo>
-            <CharacterName>{c.name}</CharacterName>
-            <span>{c.location.name}</span>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <CharacterName>{c.name}</CharacterName>
+              <CharacterLocation>{c.location.name}</CharacterLocation>
+            </div>
+            <StatusIcon status={c.status} />
           </CharacterInfo>
         </CharacterListItem>
       ))}

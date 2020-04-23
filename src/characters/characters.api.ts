@@ -20,7 +20,7 @@ export type Gender = 'female' | 'male' | 'genderless' | 'unknown'
 export interface Character {
   id: string
   name: string
-  statis: 'Dead' | 'Alive' | 'Unknown'
+  status: 'Dead' | 'Alive' | 'Unknown'
   species: string
   type: string
   gender: Gender

@@ -1,13 +1,16 @@
 import { PayloadAction } from '@reduxjs/toolkit'
 import { call, put, takeLatest } from 'redux-saga/effects'
 import { apiClient } from './characters.api'
-import { allCharactersSuccess, allCharacters } from './characters.reducer'
+import {
+  fetchCharactersPage,
+  fetchCharactersPageSuccess,
+} from './characters.reducer'
 
-function* fetchCharacters(action: PayloadAction<number>) {
+function* fetchCharactersSaga(action: PayloadAction<number>) {
   const page = action.payload
   const options = page > 1 ? { page } : undefined
   const data = yield call(apiClient.getCharacters, options)
-  yield put(allCharactersSuccess(data))
+  yield put(fetchCharactersPageSuccess(data))
 }
 
 // Saga for fetching characters, here we set up our relevant sagas for
@@ -21,5 +24,5 @@ export function* charactersSaga() {
   // keyword. this effect runs when the "allCharacters" action is dispatched
   // take latest means, if we dispatch 10 actions in sequence, ignore/abort the
   // first 9 and execute the latest
-  yield takeLatest(allCharacters.toString(), fetchCharacters)
+  yield takeLatest(fetchCharactersPage.toString(), fetchCharactersSaga)
 }

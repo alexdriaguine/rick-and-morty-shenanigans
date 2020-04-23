@@ -44,7 +44,7 @@ export const globalStyle = css`
   body {
     height: 100%;
     margin: 0;
-    background: #eeddc8;
+    background: #fff;
   }
 
   /* Remove list styles on ul, ol elements with a class attribute */
@@ -89,4 +89,9 @@ export const globalStyle = css`
 
   /* Fonts */
   @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
+
+  @font-face {
+    font-family: 'wubba';
+    src: url('get_schwifty.ttf') format('truetype');
+  }
 `

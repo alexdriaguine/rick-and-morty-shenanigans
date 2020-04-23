@@ -3,32 +3,32 @@ import { createAction, createReducer } from '@reduxjs/toolkit'
 
 export interface CharacterState {
   loading: boolean
-  entries: Character[][]
-  currentPage: number
+  error?: string
+  entries: Character[]
   numberOfPages: number
 }
 
-export const allCharacters = createAction<number>('allCharactersRequest')
-export const allCharactersSuccess = createAction<CollectionResult<Character>>(
-  'allCharactersSuccess',
-)
+export const fetchCharactersPage = createAction<number>('allCharactersRequest')
+export const fetchCharactersPageSuccess = createAction<
+  CollectionResult<Character>
+>('allCharactersSuccess')
 export const allCharactersFail = createAction('allCharactersFail')
 
 export const charactersReducer = createReducer<CharacterState>(
-  { entries: [], loading: false, currentPage: 1, numberOfPages: 0 },
+  { entries: [], loading: false, numberOfPages: 0 },
   (builder) => {
     builder
-      .addCase(allCharacters, (state, action) => {
+      .addCase(fetchCharactersPage, (state, action) => {
         state.loading = true
-        state.currentPage = action.payload
       })
-      .addCase(allCharactersSuccess, (state, action) => {
-        state.entries[state.currentPage - 1] = action.payload.results
-        state.numberOfPages = action.payload.info.pages
+      .addCase(fetchCharactersPageSuccess, (state, action) => {
+        state.entries = [...state.entries, ...action.payload.results]
         state.loading = false
+        state.numberOfPages = action.payload.info.pages
       })
       .addCase(allCharactersFail, (state) => {
         state.loading = false
+        state.error = 'wubba dubba dub dub'
       })
   },
 )
