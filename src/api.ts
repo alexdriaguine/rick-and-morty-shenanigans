@@ -38,17 +38,18 @@ const checkResponse = (res: Response) =>
 const parseJson = <TResponse>(res: Response): Promise<TResponse> => res.json()
 const makeRequest = <
   TResponse,
-  TOptions extends { [key: string]: string | number }
+  TOptions extends { [key: string]: string | number | undefined }
 >(
   endpoint: 'character',
 ) => (options?: TOptions): Promise<TResponse> => {
   const BASE_URL = 'https://rickandmortyapi.com/api'
   const query = options
     ? Object.keys(options)
+        .filter((key) => options[key] !== undefined)
         .reduce<string[]>((acc, key) => {
           return [
             ...acc,
-            `${encodeURIComponent(key)}=${encodeURIComponent(options[key])}`,
+            `${encodeURIComponent(key)}=${encodeURIComponent(options[key]!)}`,
           ]
         }, [])
         .join('&')
@@ -67,7 +68,8 @@ const makeRequest = <
 
 export const apiClient = {
   getCharacter: makeRequest<Character, { id: number }>('character'),
-  getCharacters: makeRequest<CollectionResult<Character>, { page: number }>(
-    'character',
-  ),
+  getCharacters: makeRequest<
+    CollectionResult<Character>,
+    { page?: number; name?: string }
+  >('character'),
 }
