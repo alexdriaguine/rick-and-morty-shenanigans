@@ -1,68 +1,26 @@
 import { useSelector, useDispatch } from 'react-redux'
-import { RootState } from '../rootState'
-import { fetchCharactersPage } from './characters-reducer'
+import {
+  fetchCharactersPage,
+  getCharacters,
+  getIsLoading,
+  getNumberOfPages,
+  getError,
+} from './characters-reducer'
 import { CharacterList } from './characters-list'
 import * as React from 'react'
 import { Search } from '../search'
+import { useIntersection, usePrevious, useDebouncedValue } from '../hooks'
+import styled from '@emotion/styled'
 
-// Move to reducer
-const getCharacters = ({ characters }: RootState) => characters.entries
-const getIsLoading = ({ characters }: RootState) => characters.loading
-const getNumberOfPages = ({ characters }: RootState) => characters.numberOfPages
-
-const useIntersection = (): [boolean, React.RefObject<HTMLDivElement>] => {
-  const ref = React.useRef<HTMLDivElement>(null)
-  const [intersecting, setIntersecting] = React.useState(false)
-  const [observer] = React.useState(() => {
-    return new IntersectionObserver(
-      (entries) => {
-        const [e] = entries
-        setIntersecting(e.isIntersecting)
-      },
-      {
-        threshold: 1,
-        root: null,
-        rootMargin: '0px',
-      },
-    )
-  })
-
-  React.useEffect(() => {
-    const node = ref.current
-    node && observer.observe(node)
-    return () => {
-      node && observer.unobserve(node)
-    }
-  })
-
-  return [intersecting, ref]
-}
-
-function usePrevious<T>(value: T, defaultValue?: T) {
-  const ref = React.useRef<T>()
-
-  React.useEffect(() => {
-    ref.current = value
-  }, [value])
-
-  return ref.current ?? defaultValue
-}
-
-function useDebouncedValue<T>(value: T, delay: number) {
-  const [debouncedValue, setDebouncedValue] = React.useState(value)
-
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedValue(value)
-    }, delay)
-
-    return () => {
-      clearTimeout(timer)
-    }
-  }, [value, delay])
-
-  return debouncedValue
-}
+const Error = styled.div`
+  background: salmon;
+  margin: 0 16px;
+  height: 64px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`
 
 export const Characters = () => {
   const [currentPage, setCurrentPage] = React.useState(1)
@@ -75,6 +33,7 @@ export const Characters = () => {
   const characters = useSelector(getCharacters)
   const isLoading = useSelector(getIsLoading)
   const totalNumberOfPages = useSelector(getNumberOfPages)
+  const error = useSelector(getError)
 
   const [intersecting, intersectionRef] = useIntersection()
 
@@ -89,8 +48,6 @@ export const Characters = () => {
     if (Boolean(debouncedSearchTerm) && debouncedSearchTerm.length >= 3) {
       searchTerm = debouncedSearchTerm
     }
-
-    console.log({ currentPage, searchTerm })
 
     dispatch(
       fetchCharactersPage({
@@ -110,20 +67,21 @@ export const Characters = () => {
     }
   }, [intersecting])
 
-  if (characters.length === 0) {
-    return null
-  }
-
   return (
     <div>
       <Search term={searchTerm} onChange={setSearchTerm} />
-      <CharacterList characters={characters} />
-      {currentPage < totalNumberOfPages && (
-        <div style={{ height: 100, margin: 30 }} ref={intersectionRef}>
-          <span style={{ display: isLoading ? 'block' : 'none' }}>
-            Loading...
-          </span>
-        </div>
+      {error && <Error>{error}</Error>}
+      {Array.isArray(characters) && characters.length > 0 && (
+        <>
+          <CharacterList characters={characters} />
+          {currentPage < totalNumberOfPages && (
+            <div style={{ height: 100, margin: 30 }} ref={intersectionRef}>
+              <span style={{ display: isLoading ? 'block' : 'none' }}>
+                Loading...
+              </span>
+            </div>
+          )}
+        </>
       )}
     </div>
   )

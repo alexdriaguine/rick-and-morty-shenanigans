@@ -4,24 +4,37 @@ import { apiClient } from '../api'
 import {
   fetchCharactersPage,
   fetchCharactersPageSuccess,
+  fetchCharactersFail,
 } from './characters-reducer'
+
+const getErrorMessage = (status: number) => {
+  const map: Record<number, string> = {
+    404: 'Nothing so see here, move along',
+  }
+  return map[status] ?? 'Error: Shit on the floor'
+}
 
 function* fetchCharactersSaga(
   action: PayloadAction<{ page: number; searchTerm?: string }>,
 ) {
-  const { page, searchTerm } = action.payload
-  const options = {
-    page: page > 1 ? page : undefined,
-    name: searchTerm,
-  }
+  try {
+    const { page, searchTerm } = action.payload
+    const options = {
+      page: page > 1 ? page : undefined,
+      name: searchTerm,
+    }
 
-  const data = yield call(apiClient.getCharacters, options)
-  yield put(
-    fetchCharactersPageSuccess({
-      data,
-      replaceResults: page === 1 && searchTerm !== undefined,
-    }),
-  )
+    const data = yield call(apiClient.getCharacters, options)
+    yield put(
+      fetchCharactersPageSuccess({
+        data,
+        replaceResults: page === 1,
+      }),
+    )
+  } catch (e) {
+    const status = e && e.status
+    yield put(fetchCharactersFail({ error: getErrorMessage(status), status }))
+  }
 }
 
 // Saga for fetching characters, here we set up our relevant sagas for

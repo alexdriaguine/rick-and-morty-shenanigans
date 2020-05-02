@@ -1,5 +1,6 @@
 import { Character, CollectionResult } from '../api'
 import { createAction, createReducer } from '@reduxjs/toolkit'
+import { RootState } from '../rootState'
 
 export interface CharacterState {
   loading: boolean
@@ -16,7 +17,10 @@ export const fetchCharactersPageSuccess = createAction<{
   data: CollectionResult<Character>
   replaceResults: boolean
 }>('allCharactersSuccess')
-export const allCharactersFail = createAction('allCharactersFail')
+export const fetchCharactersFail = createAction<{
+  error: string
+  status?: number
+}>('allCharactersFail')
 
 export const charactersReducer = createReducer<CharacterState>(
   { entries: [], loading: false, numberOfPages: 0 },
@@ -24,6 +28,7 @@ export const charactersReducer = createReducer<CharacterState>(
     builder
       .addCase(fetchCharactersPage, (state, action) => {
         state.loading = true
+        state.error = undefined
       })
       .addCase(fetchCharactersPageSuccess, (state, action) => {
         const { data, replaceResults } = action.payload
@@ -33,10 +38,16 @@ export const charactersReducer = createReducer<CharacterState>(
         state.loading = false
         state.numberOfPages = data.info.pages
       })
-      .addCase(allCharactersFail, (state) => {
-        console.log('failing')
+      .addCase(fetchCharactersFail, (state, action) => {
         state.loading = false
-        state.error = 'wubba dubba dub dub'
+        state.error = action.payload.error
+        state.entries = []
       })
   },
 )
+
+export const getCharacters = ({ characters }: RootState) => characters.entries
+export const getIsLoading = ({ characters }: RootState) => characters.loading
+export const getNumberOfPages = ({ characters }: RootState) =>
+  characters.numberOfPages
+export const getError = ({ characters }: RootState) => characters.error

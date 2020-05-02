@@ -32,8 +32,10 @@ export interface Character {
   created: string
 }
 
-const checkResponse = (res: Response) =>
-  res.ok ? res : Promise.reject('Shit on the floor: ' + res.status)
+const checkResponse = (res: Response) => {
+  if (res.ok) return Promise.resolve(res)
+  return Promise.reject({ status: res.status })
+}
 
 const parseJson = <TResponse>(res: Response): Promise<TResponse> => res.json()
 const makeRequest = <
