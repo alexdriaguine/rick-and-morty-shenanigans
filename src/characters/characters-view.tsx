@@ -1,8 +1,9 @@
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../rootState'
-import { fetchCharactersPage } from './characters.reducer'
-import { CharacterList } from './character-list'
+import { fetchCharactersPage } from './characters-reducer'
+import { CharacterList } from './characters-list'
 import * as React from 'react'
+import { Search } from '../search'
 
 // Move to reducer
 const getCharacters = ({ characters }: RootState) => characters.entries
@@ -37,19 +38,71 @@ const useIntersection = (): [boolean, React.RefObject<HTMLDivElement>] => {
   return [intersecting, ref]
 }
 
+function usePrevious<T>(value: T, defaultValue?: T) {
+  const ref = React.useRef<T>()
+
+  React.useEffect(() => {
+    ref.current = value
+  }, [value])
+
+  return ref.current ?? defaultValue
+}
+
+function useDebouncedValue<T>(value: T, delay: number) {
+  const [debouncedValue, setDebouncedValue] = React.useState(value)
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value)
+    }, delay)
+
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [value, delay])
+
+  return debouncedValue
+}
+
 export const Characters = () => {
   const [currentPage, setCurrentPage] = React.useState(1)
+  const [searchTerm, setSearchTerm] = React.useState('')
+  const debouncedSearchTerm = useDebouncedValue(searchTerm, 500)
+  const previousSearchTerm = usePrevious(debouncedSearchTerm, '')
+
+  const dispatch = useDispatch()
 
   const characters = useSelector(getCharacters)
   const isLoading = useSelector(getIsLoading)
   const totalNumberOfPages = useSelector(getNumberOfPages)
-  const dispatch = useDispatch()
 
   const [intersecting, intersectionRef] = useIntersection()
 
   React.useEffect(() => {
-    dispatch(fetchCharactersPage(currentPage))
-  }, [dispatch, currentPage])
+    let page = currentPage
+    let searchTerm: string | undefined = undefined
+
+    if (debouncedSearchTerm !== previousSearchTerm) {
+      page = 1
+    }
+
+    if (Boolean(debouncedSearchTerm) && debouncedSearchTerm.length >= 3) {
+      searchTerm = debouncedSearchTerm
+    }
+
+    console.log({ currentPage, searchTerm })
+
+    dispatch(
+      fetchCharactersPage({
+        page,
+        searchTerm,
+      }),
+    )
+    // this is fine, we do not want to react to previous search term
+    // only read the value, and it will not be stale, we just ignore running
+    // the effect again
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, currentPage, debouncedSearchTerm])
 
   React.useEffect(() => {
     if (intersecting) {
@@ -63,6 +116,7 @@ export const Characters = () => {
 
   return (
     <div>
+      <Search term={searchTerm} onChange={setSearchTerm} />
       <CharacterList characters={characters} />
       {currentPage < totalNumberOfPages && (
         <div style={{ height: 100, margin: 30 }} ref={intersectionRef}>

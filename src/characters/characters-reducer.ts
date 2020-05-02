@@ -1,4 +1,4 @@
-import { Character, CollectionResult } from './characters.api'
+import { Character, CollectionResult } from '../api'
 import { createAction, createReducer } from '@reduxjs/toolkit'
 
 export interface CharacterState {
@@ -8,10 +8,14 @@ export interface CharacterState {
   numberOfPages: number
 }
 
-export const fetchCharactersPage = createAction<number>('allCharactersRequest')
-export const fetchCharactersPageSuccess = createAction<
-  CollectionResult<Character>
->('allCharactersSuccess')
+export const fetchCharactersPage = createAction<{
+  page: number
+  searchTerm?: string
+}>('allCharactersRequest')
+export const fetchCharactersPageSuccess = createAction<{
+  data: CollectionResult<Character>
+  replaceResults: boolean
+}>('allCharactersSuccess')
 export const allCharactersFail = createAction('allCharactersFail')
 
 export const charactersReducer = createReducer<CharacterState>(
@@ -22,11 +26,15 @@ export const charactersReducer = createReducer<CharacterState>(
         state.loading = true
       })
       .addCase(fetchCharactersPageSuccess, (state, action) => {
-        state.entries = [...state.entries, ...action.payload.results]
+        const { data, replaceResults } = action.payload
+        state.entries = replaceResults
+          ? data.results
+          : [...state.entries, ...data.results]
         state.loading = false
-        state.numberOfPages = action.payload.info.pages
+        state.numberOfPages = data.info.pages
       })
       .addCase(allCharactersFail, (state) => {
+        console.log('failing')
         state.loading = false
         state.error = 'wubba dubba dub dub'
       })

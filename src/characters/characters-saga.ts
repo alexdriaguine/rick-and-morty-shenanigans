@@ -1,16 +1,27 @@
 import { PayloadAction } from '@reduxjs/toolkit'
 import { call, put, takeLatest } from 'redux-saga/effects'
-import { apiClient } from './characters.api'
+import { apiClient } from '../api'
 import {
   fetchCharactersPage,
   fetchCharactersPageSuccess,
-} from './characters.reducer'
+} from './characters-reducer'
 
-function* fetchCharactersSaga(action: PayloadAction<number>) {
-  const page = action.payload
-  const options = page > 1 ? { page } : undefined
+function* fetchCharactersSaga(
+  action: PayloadAction<{ page: number; searchTerm?: string }>,
+) {
+  const { page, searchTerm } = action.payload
+  const options = {
+    page: page > 1 ? page : undefined,
+    name: searchTerm,
+  }
+
   const data = yield call(apiClient.getCharacters, options)
-  yield put(fetchCharactersPageSuccess(data))
+  yield put(
+    fetchCharactersPageSuccess({
+      data,
+      replaceResults: page === 1 && searchTerm !== undefined,
+    }),
+  )
 }
 
 // Saga for fetching characters, here we set up our relevant sagas for
