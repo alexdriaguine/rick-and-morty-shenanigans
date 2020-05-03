@@ -34,11 +34,10 @@ export const App = () => {
               <Main>
                 <Header />
                 <Transition
-                  config={config.slow}
                   keys={props.location.pathname.split('/')[1]}
-                  from={{ opacity: 0, transform: 'translate(-100%, 0)' }}
-                  enter={{ opacity: 1, transform: 'translate(0, 0)' }}
-                  leave={{ opacity: 0, transform: 'translate(100%, 0)' }}
+                  from={{ opacity: 0, transform: 'translateY(100%)' }}
+                  enter={{ opacity: 1, transform: 'translateY(0)' }}
+                  leave={{ opacity: 0, transform: 'translateY(100%)' }}
                   items={props.location}
                 >
                   {(loc, state) => (style) => {
