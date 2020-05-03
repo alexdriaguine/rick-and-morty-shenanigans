@@ -3,6 +3,7 @@ import * as React from 'react'
 import { Search } from '../search'
 import { useIntersection, usePrevious, useDebouncedValue } from '../hooks'
 import styled from '@emotion/styled'
+import { keyframes } from '@emotion/core'
 import { Character, apiClient, CollectionResult } from '../api'
 
 const Error = styled.div`
@@ -121,19 +122,7 @@ export const Characters = () => {
   }, [intersecting])
 
   return (
-    <div style={{ position: 'relative' }}>
-      <div
-        style={{
-          position: 'sticky',
-          top: 20,
-          right: 20,
-          zIndex: 1,
-          width: 20,
-          border: '2px solid teal',
-        }}
-      >
-        {state.currentPage}
-      </div>
+    <div>
       <Search
         term={state.searchTerm}
         onChange={(searchTerm) =>
@@ -148,12 +137,38 @@ export const Characters = () => {
         <>
           <CharacterList characters={state.characters} />
           {state.currentPage < state.totalNumberOfPages && (
-            <div style={{ height: 100, margin: 30 }} ref={intersectionRef}>
-              <span>Loading...</span>
-            </div>
+            <IntersectionAnchor ref={intersectionRef}>
+              <LoadingIndicator />
+            </IntersectionAnchor>
           )}
         </>
       )}
     </div>
   )
 }
+
+const spin = keyframes`
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+`
+
+const LoadingIndicator = styled.div`
+  width: 24px;
+  height: 24px;
+  border-top-color: tomato;
+  border-left-color: tomato;
+  border-bottom-color: transparent;
+  border-right-color: transparent;
+  border-style: solid;
+  border-width: 2px;
+  border-radius: 50%;
+  animation: ${spin} 400ms linear infinite;
+`
+
+const IntersectionAnchor = styled.div`
+  height: 64;
+  margin: 16;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`
