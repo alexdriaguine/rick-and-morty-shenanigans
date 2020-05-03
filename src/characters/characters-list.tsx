@@ -1,6 +1,7 @@
 import * as React from 'react'
 import styled from '@emotion/styled'
 import { Character } from '../api'
+import { Link } from 'react-router-dom'
 
 const StyledCharacterList = styled.ul`
   display: flex;
@@ -39,13 +40,15 @@ const CharacterInfo = styled.div`
   flex: 1;
 `
 
-const CharacterName = styled.span`
+const CharacterName = styled.p`
   font-weight: 600;
   font-size: 16px;
+  margin: 0;
 `
 
-const CharacterLocation = styled.span`
+const CharacterLocation = styled.p`
   font-size: 12px;
+  margin: 0;
 `
 
 const StatusIcon = (props: { status: 'Alive' | 'Dead' | 'Unknown' }) => {
@@ -57,7 +60,7 @@ const StatusIcon = (props: { status: 'Alive' | 'Dead' | 'Unknown' }) => {
 
   const icon = iconMap[props.status] || iconMap['Unknown']
   return (
-    <span role="img" aria-label="dude">
+    <span role="img" aria-label="status-icon">
       {icon}
     </span>
   )
@@ -71,16 +74,18 @@ export const CharacterList = ({ characters }: Props) => {
   return (
     <StyledCharacterList>
       {characters.map((c) => (
-        <CharacterListItem key={c.id}>
-          <CharacterImage alt={c.name} src={c.image} />
-          <CharacterInfo>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <CharacterName>{c.name}</CharacterName>
-              <CharacterLocation>{c.location.name}</CharacterLocation>
-            </div>
-            <StatusIcon status={c.status} />
-          </CharacterInfo>
-        </CharacterListItem>
+        <Link to="#">
+          <CharacterListItem key={c.id}>
+            <CharacterImage alt={c.name} src={c.image} />
+            <CharacterInfo>
+              <div>
+                <CharacterName>{c.name}</CharacterName>
+                <CharacterLocation>{c.location.name}</CharacterLocation>
+              </div>
+              <StatusIcon status={c.status} />
+            </CharacterInfo>
+          </CharacterListItem>
+        </Link>
       ))}
     </StyledCharacterList>
   )
