@@ -1,5 +1,6 @@
 import * as React from 'react'
 import styled from '@emotion/styled'
+import { useHistory, Link } from 'react-router-dom'
 
 const HeaderWrapper = styled.header`
   height: 64px;
@@ -22,10 +23,27 @@ const HeaderContent = styled.div`
 const Navigation = () => <nav>Nav</nav>
 
 export const Header = () => {
+  const history = useHistory()
+  const path = history.location.pathname.split('/').filter((p) => p)
+  const showBackButton = path[0] === 'character' && path.length > 1
   return (
     <HeaderWrapper>
       <HeaderContent>
-        <h1 style={{ fontSize: 20 }}>Rick and Morty Pokedex</h1>
+        {showBackButton ? (
+          <Link
+            onClick={(e) => {
+              // have to prop to show anchors href, but
+              // navigate via history so we can use the goBack function
+              e.preventDefault()
+              history.goBack()
+            }}
+            to={path[0]}
+          >
+            Back
+          </Link>
+        ) : (
+          <h1 style={{ fontSize: 20 }}>Rick and Morty Pokedex</h1>
+        )}
         <Navigation />
       </HeaderContent>
     </HeaderWrapper>

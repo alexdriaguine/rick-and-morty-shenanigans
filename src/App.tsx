@@ -2,10 +2,13 @@ import * as React from 'react'
 import styled from '@emotion/styled'
 import { Global } from '@emotion/core'
 import { globalStyle } from './globalStyles'
-import { Characters } from './characters/characters-view'
-import { Switch, Route, Link, BrowserRouter } from 'react-router-dom'
+import { CharacterRoutes } from './characters/character-routes'
+import { Switch, Route, Link, BrowserRouter, Redirect } from 'react-router-dom'
 import { Home } from './home'
 import { Header } from './header'
+import { Transition, animated, config } from 'react-spring/renderprops'
+import { Characters } from './characters/characters-view'
+import { CharacterDetails } from './characters/character-details-view'
 
 const Main = styled.main`
   font-family: 'Open Sans', sans-serif;
@@ -14,25 +17,68 @@ const Main = styled.main`
   margin: 0 auto;
 `
 
+const Fill = styled.div`
+  top: 64px;
+  position: absolute;
+  width: 100%;
+  max-width: 760px;
+`
+
 export const App = () => {
   return (
     <>
       <BrowserRouter>
-        <Header />
-        <Main>
-          <Switch>
-            <Route exact path="/">
-              <Home />
-            </Route>
-            <Route path="/characters">
-              <Characters />
-            </Route>
-            <Route path="*">
-              nah not found
-              <Link to="/">Go to home</Link>
-            </Route>
-          </Switch>
-        </Main>
+        <Route
+          render={(props) => {
+            return (
+              <Main>
+                <Header />
+                <Transition
+                  config={config.slow}
+                  keys={props.location.pathname.split('/')[1]}
+                  from={{ opacity: 0, transform: 'translate(-100%, 0)' }}
+                  enter={{ opacity: 1, transform: 'translate(0, 0)' }}
+                  leave={{ opacity: 0, transform: 'translate(100%, 0)' }}
+                  items={props.location}
+                >
+                  {(loc, state) => (style) => {
+                    return (
+                      <Switch
+                        location={state === 'update' ? props.location : loc}
+                      >
+                        <Route component={Home} exact path="/" />
+                        <Route
+                          render={() => (
+                            <Fill>
+                              <animated.div style={{ ...style }}>
+                                <Characters />
+                              </animated.div>
+                            </Fill>
+                          )}
+                          path="/characters"
+                        />
+                        <Route
+                          render={() => (
+                            <Fill>
+                              <animated.div style={{ ...style }}>
+                                <CharacterDetails />
+                              </animated.div>
+                            </Fill>
+                          )}
+                          path="/character/:id"
+                        />
+                        <Route path="*">
+                          nah not found
+                          <Link to="/">Go to home</Link>
+                        </Route>
+                      </Switch>
+                    )
+                  }}
+                </Transition>
+              </Main>
+            )
+          }}
+        />
       </BrowserRouter>
       <Global styles={globalStyle} />
     </>

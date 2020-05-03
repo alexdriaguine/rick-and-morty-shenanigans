@@ -8,9 +8,9 @@ import {
   useQuery,
 } from '../hooks'
 import styled from '@emotion/styled'
-import { keyframes } from '@emotion/core'
 import { Character, apiClient, CollectionResult } from '../api'
-import { useHistory, useLocation } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
+import { Spinner } from '../ui/spinner'
 
 const Error = styled.div`
   background: salmon;
@@ -41,7 +41,6 @@ type Action =
 const reducer: React.Reducer<State, Action> = (state, action) => {
   switch (action.type) {
     case 'loadMore':
-      console.log(state.currentPage, state.totalNumberOfPages)
       if (state.currentPage + 1 > state.totalNumberOfPages) return state
       return { ...state, currentPage: state.currentPage + 1 }
     case 'setSearchTerm':
@@ -171,7 +170,7 @@ export const Characters = () => {
           <CharacterList characters={state.characters} />
           {state.currentPage < state.totalNumberOfPages && (
             <IntersectionAnchor ref={intersectionRef}>
-              <LoadingIndicator />
+              <Spinner />
             </IntersectionAnchor>
           )}
         </>
@@ -179,24 +178,6 @@ export const Characters = () => {
     </div>
   )
 }
-
-const spin = keyframes`
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-`
-
-const LoadingIndicator = styled.div`
-  width: 24px;
-  height: 24px;
-  border-top-color: tomato;
-  border-left-color: tomato;
-  border-bottom-color: transparent;
-  border-right-color: transparent;
-  border-style: solid;
-  border-width: 2px;
-  border-radius: 50%;
-  animation: ${spin} 400ms linear infinite;
-`
 
 const IntersectionAnchor = styled.div`
   height: 64;

@@ -2,6 +2,7 @@ import * as React from 'react'
 import styled from '@emotion/styled'
 import { Character } from '../api'
 import { Link } from 'react-router-dom'
+import { StatusIcon } from './character-components'
 
 const StyledCharacterList = styled.ul`
   display: flex;
@@ -24,6 +25,7 @@ const CharacterListItem = styled.li`
   border-radius: 8px;
   display: flex;
   align-items: center;
+  padding: 8px;
 `
 
 const CharacterImage = styled.img`
@@ -51,41 +53,35 @@ const CharacterLocation = styled.p`
   margin: 0;
 `
 
-const StatusIcon = (props: { status: 'Alive' | 'Dead' | 'Unknown' }) => {
-  const iconMap: Record<'Alive' | 'Dead' | 'Unknown', string> = {
-    Alive: '😀',
-    Dead: '💀',
-    Unknown: '❓',
-  }
-
-  const icon = iconMap[props.status] || iconMap['Unknown']
-  return (
-    <span role="img" aria-label="status-icon">
-      {icon}
-    </span>
-  )
-}
-
 interface Props {
   characters: Character[]
 }
 
+const CharacterLink = styled(Link)`
+  display: block;
+  color: #444;
+  text-decoration: none;
+  &:visited {
+    color: #444;
+  }
+`
+
 export const CharacterList = ({ characters }: Props) => {
   return (
     <StyledCharacterList>
-      {characters.map((c) => (
-        <Link to="#">
-          <CharacterListItem key={c.id}>
-            <CharacterImage alt={c.name} src={c.image} />
+      {characters.map(({ id, name, image, location, status }) => (
+        <CharacterLink key={id} to={`/character/${id}`}>
+          <CharacterListItem>
+            <CharacterImage alt={name} src={image} />
             <CharacterInfo>
               <div>
-                <CharacterName>{c.name}</CharacterName>
-                <CharacterLocation>{c.location.name}</CharacterLocation>
+                <CharacterName>{name}</CharacterName>
+                <CharacterLocation>{location.name}</CharacterLocation>
               </div>
-              <StatusIcon status={c.status} />
+              <StatusIcon status={status} />
             </CharacterInfo>
           </CharacterListItem>
-        </Link>
+        </CharacterLink>
       ))}
     </StyledCharacterList>
   )

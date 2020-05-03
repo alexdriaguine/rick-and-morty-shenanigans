@@ -43,8 +43,9 @@ const makeRequest = <
   TOptions extends { [key: string]: string | number | undefined }
 >(
   endpoint: 'character',
-) => (options?: TOptions): Promise<TResponse> => {
+) => (_options?: TOptions): Promise<TResponse> => {
   const BASE_URL = 'https://rickandmortyapi.com/api'
+  const { id, ...options } = _options as TOptions & { id?: string }
   const query = options
     ? Object.keys(options)
         .filter((key) => options[key] !== undefined)
@@ -58,6 +59,10 @@ const makeRequest = <
     : undefined
 
   let url = `${BASE_URL}/${endpoint}`
+
+  if (id !== undefined) {
+    url += `/${id}`
+  }
 
   if (query) {
     url += `?${query}`
