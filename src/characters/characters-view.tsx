@@ -1,10 +1,16 @@
 import { CharacterList } from './characters-list'
 import * as React from 'react'
 import { Search } from '../search'
-import { useIntersection, usePrevious, useDebouncedValue } from '../hooks'
+import {
+  useIntersection,
+  usePrevious,
+  useDebouncedValue,
+  useQuery,
+} from '../hooks'
 import styled from '@emotion/styled'
 import { keyframes } from '@emotion/core'
 import { Character, apiClient, CollectionResult } from '../api'
+import { useHistory, useLocation } from 'react-router-dom'
 
 const Error = styled.div`
   background: salmon;
@@ -28,7 +34,7 @@ interface State {
 type Action =
   | { type: 'loadMore' }
   | { type: 'setSearchTerm'; searchTerm: string }
-  | { type: 'fetchCharacters'; page: number }
+  | { type: 'fetchCharacters' }
   | { type: 'fetchCharactersSuccess'; data: CollectionResult<Character> }
   | { type: 'fetchCharactersFail'; error: string }
 
@@ -45,7 +51,6 @@ const reducer: React.Reducer<State, Action> = (state, action) => {
         ...state,
         loading: true,
         error: undefined,
-        currentPage: action.page,
       }
     case 'fetchCharactersSuccess':
       return {
@@ -69,51 +74,81 @@ const reducer: React.Reducer<State, Action> = (state, action) => {
   }
 }
 
+const useQuerySyncForSearchEffect = (searchTerm: string) => {
+  const history = useHistory()
+  React.useEffect(() => {
+    if (searchTerm?.length > 0) {
+      history.replace({
+        search: `search=${searchTerm}`,
+      })
+    } else {
+      history.replace({
+        search: '',
+      })
+    }
+  }, [searchTerm, history])
+}
+
+const useCharacterFetchEffect = ({
+  searchTerm,
+  dispatch,
+  page,
+}: {
+  searchTerm: string
+  dispatch: React.Dispatch<Action>
+  page: number
+}) => {
+  const debouncedSearchTerm = useDebouncedValue(searchTerm, 500).trim()
+  const previousSearchTerm = usePrevious(searchTerm, '')?.trim()
+
+  React.useEffect(() => {
+    const resetPage = debouncedSearchTerm !== previousSearchTerm
+    const canSearch = debouncedSearchTerm?.length > 0
+
+    const options = {
+      page: resetPage ? 1 : page,
+      name: canSearch ? debouncedSearchTerm : undefined,
+    }
+
+    const handleSuccess = (data: CollectionResult<Character>) =>
+      dispatch({ type: 'fetchCharactersSuccess', data })
+    const handleError = (err: { status?: number }) =>
+      dispatch({
+        type: 'fetchCharactersFail',
+        error:
+          err.status === 404
+            ? 'Nothing to see here'
+            : 'Wubbalubb dubb error happened',
+      })
+
+    dispatch({ type: 'fetchCharacters' })
+    apiClient.getCharacters(options).then(handleSuccess).catch(handleError)
+
+    // this is fine, we do not want to react to previous search term
+    // only read the value, and it will not be stale, we just ignore running
+    // the effect again if we re-render for some other reason and the
+    // previous search term will be the same as current
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, page, debouncedSearchTerm])
+}
+
 export const Characters = () => {
+  const search = useQuery().get('search')
   const [state, dispatch] = React.useReducer(reducer, {
     currentPage: 1,
-    searchTerm: '',
+    searchTerm: search || '',
     characters: [],
     loading: false,
     totalNumberOfPages: 1,
   })
-  const debouncedSearchTerm = useDebouncedValue(state.searchTerm, 500)
-  const previousSearchTerm = usePrevious(debouncedSearchTerm, '')
   const [intersecting, intersectionRef] = useIntersection()
 
-  React.useEffect(() => {
-    let page = state.currentPage
-    let searchTerm: string | undefined = undefined
-
-    if (debouncedSearchTerm.trim() !== previousSearchTerm?.trim()) {
-      page = 1
-    }
-
-    if (Boolean(debouncedSearchTerm) && debouncedSearchTerm.length >= 3) {
-      searchTerm = debouncedSearchTerm
-    }
-    dispatch({ type: 'fetchCharacters', page })
-
-    apiClient
-      .getCharacters({ page, name: searchTerm })
-      .then((res) => {
-        dispatch({ type: 'fetchCharactersSuccess', data: res })
-      })
-      .catch((error) => {
-        console.log(error)
-        dispatch({
-          type: 'fetchCharactersFail',
-          error:
-            error.status === 404
-              ? 'Nothing to see here'
-              : 'Wubbalubb dubb error happened',
-        })
-      })
-    // this is fine, we do not want to react to previous search term
-    // only read the value, and it will not be stale, we just ignore running
-    // the effect again
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, state.currentPage, debouncedSearchTerm])
+  useQuerySyncForSearchEffect(state.searchTerm)
+  useCharacterFetchEffect({
+    page: state.currentPage,
+    searchTerm: state.searchTerm,
+    dispatch,
+  })
 
   React.useEffect(() => {
     if (intersecting) {
@@ -121,17 +156,15 @@ export const Characters = () => {
     }
   }, [intersecting])
 
+  const handleSearchchange = (searchTerm: string) =>
+    dispatch({
+      type: 'setSearchTerm',
+      searchTerm,
+    })
+
   return (
     <div>
-      <Search
-        term={state.searchTerm}
-        onChange={(searchTerm) =>
-          dispatch({
-            type: 'setSearchTerm',
-            searchTerm,
-          })
-        }
-      />
+      <Search term={state.searchTerm} onChange={handleSearchchange} />
       {state.error && <Error>{state.error}</Error>}
       {state.characters.length > 0 && (
         <>
