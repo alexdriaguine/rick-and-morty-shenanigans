@@ -25,7 +25,7 @@ const Navigation = () => <nav>Nav</nav>
 export const Header = () => {
   const history = useHistory()
   const path = history.location.pathname.split('/').filter((p) => p)
-  const showBackButton = path[0] === 'character' && path.length > 1
+  const showBackButton = path[0] === 'characters' && path.length > 1
   return (
     <HeaderWrapper>
       <HeaderContent>
