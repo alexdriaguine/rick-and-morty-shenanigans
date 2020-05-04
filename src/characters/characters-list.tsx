@@ -70,7 +70,7 @@ export const CharacterList = ({ characters }: Props) => {
   return (
     <StyledCharacterList>
       {characters.map(({ id, name, image, location, status }) => (
-        <CharacterLink key={id} to={`/character/${id}`}>
+        <CharacterLink key={id} to={`/characters/${id}`}>
           <CharacterListItem>
             <CharacterImage alt={name} src={image} />
             <CharacterInfo>
